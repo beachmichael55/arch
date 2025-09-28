@@ -18,12 +18,11 @@ export ORANGE=$(tput setaf 3)
 export BLUE=$(tput setaf 4)
 export PURPLE=$(tput setaf 5)
 export CYAN=$(tput setaf 6)
-export LGEY=$(tput setaf 7)
 export GREY=$(tput setaf 8)
 
 # Display usage information
 function usage() {
-    echo "Usage : ./architect.sh [OPTION]"
+    echo "Usage : ./arch.sh [OPTION]"
     echo "Options :"; echo
     echo "  -h --help    : Display this help."
     echo "  -v --verbose : Verbose mode."
@@ -144,7 +143,7 @@ function little_step() {
     local -r function=$1
     local -r message=$2
 
-    echo -e "\n${ORANGE}${message}${RESET}"
+    echo -e "\n${PURPLE}${message}${RESET}"
     ${function}
 }
 
