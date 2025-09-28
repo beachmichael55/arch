@@ -7,8 +7,8 @@
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
 # Set gettext domains for translation
-export TEXTDOMAIN="architect"
-export TEXTDOMAINDIR="$SCRIPT_DIR/po"
+unset TEXTDOMAIN
+unset TEXTDOMAINDIR
 
 # Set up colors for terminal output
 export RESET=$(tput sgr0)
@@ -20,11 +20,11 @@ export PURPLE=$(tput setaf 5)
 
 # Display usage information
 function usage() {
-    eval_gettext "Usage : ./architect.sh [OPTION]"; echo
-    eval_gettext "Options :"; echo
-    eval_gettext "  -h --help    : Display this help."; echo
-    eval_gettext "  -v --verbose : Verbose mode."; echo
-    eval_gettext "  --no-reboot  : Do not reboot the system at the end of the script."; echo
+    echo "Usage : ./architect.sh [OPTION]"
+    echo "Options :"; echo
+    echo "  -h --help    : Display this help."
+    echo "  -v --verbose : Verbose mode."
+    echo "  --no-reboot  : Do not reboot the system at the end of the script."
 }
 
 # Parse command-line arguments
@@ -62,15 +62,17 @@ export NOREBOOT=${NOREBOOT:-false}
 
 # Ensure the script is not run as root
 if [[ $(whoami) == 'root' ]]; then
-    echo; eval_gettext "\${RED}Do not run this script as root, use a user with sudo rights\${RESET}"; echo
+    echo
+	echo "${RED}Do not run this script as root, use a user with sudo rights${RESET}"
+	echo
     exit 1
 fi
 
 # Prompt for sudo and test privileges
 if sudo -v; then
-    echo; eval_gettext "\${GREEN}Root privileges granted\${RESET}"; echo
+    echo "${GREEN}Root privileges granted${RESET}"
 else
-    echo; eval_gettext "\${RED}Root privileges denied\${RESET}"; echo
+    echo "${RED}Root privileges denied${RESET}"
     exit 1
 fi
 
@@ -151,49 +153,64 @@ function main() {
     local -r start_time="$(date +%s)"
 
     # Initialization
-    display_step "$(eval_gettext "Initialization")"
+    display_step "Initialization"
     init_log
     header
 
     # System configuration
-    display_step "$(eval_gettext "System preparation")"
+    display_step "System preparation"
     sleep 1
-    little_step config_pacman            "$(eval_gettext "Pacman configuration")"
-    little_step install_aur              "$(eval_gettext "AUR helper installation")"
-    little_step mirrorlist               "$(eval_gettext "Mirrorlist configuration")"
-    little_step install_headers          "$(eval_gettext "Kernel headers installation")"
-    little_step configure_sysctl_tweaks  "$(eval_gettext "Kernel tweaks")"
-    little_step sound_server             "$(eval_gettext "Sound server configuration")"
-    little_step setup_system_loaders     "$(eval_gettext "System loaders configuration")"
-    little_step usefull_package          "$(eval_gettext "Useful package installation")"
-	little_step setup_flatpak			 "$(eval_gettext "Flatpak setup")"
-    little_step configure_sysctl_tweaks  "$(eval_gettext "sysctl kernel tweaks")"
-    little_step firewall                 "$(eval_gettext "Firewall installation")"
-    # little_step apparmor                 "$(eval_gettext "Apparmor installation")"
-    little_step shell_config             "$(eval_gettext "Shell configuration")"
-    little_step add_groups_to_user       "$(eval_gettext "Adding user to necessary groups")"
+    little_step config_pacman            "Pacman configuration"
+    little_step install_aur              "AUR helper installation"
+    little_step mirrorlist               "Mirrorlist configuration"
+    little_step install_headers          "Kernel headers installation"
+    little_step configure_sysctl_tweaks  "Kernel tweaks"
+    little_step sound_server             "Sound server configuration"
+	read -p "Pause?: " PAUSED
+    little_step setup_system_loaders     "System loaders configuration"
+	read -p "Pause?: " PAUSED
+	little_step setup_flatpak			 "Flatpak setup"
+	read -p "Pause?: " PAUSED
+    little_step usefull_package          "Useful package installation"
+	read -p "Pause?: " PAUSED
+    little_step configure_sysctl_tweaks  "sysctl kernel tweaks"
+	read -p "Pause?: " PAUSED
+    little_step firewall                 "Firewall installation"
+	read -p "Pause?: " PAUSED
+    # little_step apparmor                 "Apparmor installation"
+    little_step shell_config             "Shell configuration"
+	read -p "Pause?: " PAUSED
+    little_step add_groups_to_user       "Adding user to necessary groups"
+	read -p "Pause?: " PAUSED
 
     # Driver installation
-    display_step "$(eval_gettext "System configuration")"
+    display_step "System configuration"
     sleep 1
-    little_step video_drivers            "$(eval_gettext "Video drivers installation")"
-    little_step gamepad                  "$(eval_gettext "Gamepad configuration")"
-    little_step printer                  "$(eval_gettext "Printer configuration")"
-    little_step bluetooth                "$(eval_gettext "Bluetooth configuration")"
+    little_step video_drivers            "Video drivers installation"
+	read -p "Pause?: " PAUSED
+    little_step gamepad                  "Gamepad configuration"
+	read -p "Pause?: " PAUSED
+    little_step printer                  "Printer configuration"
+	read -p "Pause?: " PAUSED
+    little_step bluetooth                "Bluetooth configuration"
+	read -p "Pause?: " PAUSED
 
     # Desktop environment configuration
-    display_step "$(eval_gettext "Environment configuration")"
+    display_step "Environment configuration"
     sleep 1
-    little_step detect_de                "$(eval_gettext "Desktop environment detection")"
+    little_step detect_de                "Desktop environment detection"
+	read -p "Pause?: " PAUSED
 
     # Software installation
     sleep 1
-    display_step "$(eval_gettext "Software installation")"
-    little_step install_software         "$(eval_gettext "Software installation")"
+    display_step "oftware installation"
+    little_step install_software         "Software installation"
+	read -p "Pause?: " PAUSED
 
     # Final wrap-up
     sleep 1
     endscript "${start_time}"
+	read -p "Pause?: " PAUSED
 }
 
 # Launch main procedure
