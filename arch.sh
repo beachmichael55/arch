@@ -14,9 +14,12 @@ unset TEXTDOMAINDIR
 export RESET=$(tput sgr0)
 export RED=$(tput setaf 1)
 export GREEN=$(tput setaf 2)
-export YELLOW=$(tput setaf 3)
+export ORANGE=$(tput setaf 3)
 export BLUE=$(tput setaf 4)
 export PURPLE=$(tput setaf 5)
+export CYAN=$(tput setaf 6)
+export LGEY=$(tput setaf 7)
+export GREY=$(tput setaf 8)
 
 # Display usage information
 function usage() {
@@ -141,7 +144,7 @@ function little_step() {
     local -r function=$1
     local -r message=$2
 
-    echo -e "\n${YELLOW}${message}${RESET}"
+    echo -e "\n${ORANGE}${message}${RESET}"
     ${function}
 }
 
