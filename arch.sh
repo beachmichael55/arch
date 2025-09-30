@@ -163,15 +163,22 @@ function main() {
     # System configuration
     display_step "System preparation"
     sleep 1
-    #little_step config_pacman            "Pacman configuration"
-    #little_step install_aur              "AUR helper installation"
-    #little_step mirrorlist               "Mirrorlist configuration"
-    #little_step install_headers          "Kernel headers installation"
-    #little_step configure_sysctl_tweaks  "Kernel tweaks"
-    #little_step sound_server             "Sound server configuration"
-    #little_step setup_system_loaders     "System loaders configuration"
-	#little_step setup_flatpak			 "Flatpak setup"
+    little_step config_pacman            "Pacman configuration"
+	read -p "Pause?: " PAUSED
+    little_step install_aur              "AUR helper installation"
+	read -p "Pause?: " PAUSED
+    little_step mirrorlist               "Mirrorlist configuration"
+	read -p "Pause?: " PAUSED
+    little_step install_headers          "Kernel headers installation"
+	read -p "Pause?: " PAUSED
+    little_step configure_sysctl_tweaks  "Kernel tweaks"
+    little_step sound_server             "Sound server configuration"
+	read -p "Pause?: " PAUSED
+    little_step setup_system_loaders     "System loaders configuration"
+	read -p "Pause?: " PAUSED
+	little_step setup_flatpak			 "Flatpak setup"
     little_step usefull_package          "Useful package installation"
+	read -p "Pause?: " PAUSED
 	read -p "Pause?: " PAUSED
     little_step configure_sysctl_tweaks  "sysctl kernel tweaks"
 	read -p "Pause?: " PAUSED
