@@ -164,60 +164,41 @@ function main() {
     display_step "System preparation"
     sleep 1
     little_step config_pacman            "Pacman configuration"
-	read -p "Pause?: " PAUSED
     little_step install_aur              "AUR helper installation"
-	read -p "Pause?: " PAUSED
     little_step mirrorlist               "Mirrorlist configuration"
-	read -p "Pause?: " PAUSED
     little_step install_headers          "Kernel headers installation"
-	read -p "Pause?: " PAUSED
     little_step configure_sysctl_tweaks  "Kernel tweaks"
     little_step sound_server             "Sound server configuration"
-	read -p "Pause?: " PAUSED
     little_step setup_system_loaders     "System loaders configuration"
-	read -p "Pause?: " PAUSED
 	little_step setup_flatpak			 "Flatpak setup"
     little_step usefull_package          "Useful package installation"
-	read -p "Pause?: " PAUSED
-	read -p "Pause?: " PAUSED
     little_step configure_sysctl_tweaks  "sysctl kernel tweaks"
-	read -p "Pause?: " PAUSED
     little_step firewall                 "Firewall installation"
-	read -p "Pause?: " PAUSED
     # little_step apparmor                 "Apparmor installation"
     little_step shell_config             "Shell configuration"
-	read -p "Pause?: " PAUSED
     little_step add_groups_to_user       "Adding user to necessary groups"
-	read -p "Pause?: " PAUSED
 
     # Driver installation
     display_step "System configuration"
     sleep 1
     little_step video_drivers            "Video drivers installation"
-	read -p "Pause?: " PAUSED
     little_step gamepad                  "Gamepad configuration"
-	read -p "Pause?: " PAUSED
     little_step printer                  "Printer configuration"
-	read -p "Pause?: " PAUSED
     little_step bluetooth                "Bluetooth configuration"
-	read -p "Pause?: " PAUSED
 
     # Desktop environment configuration
     display_step "Environment configuration"
     sleep 1
     little_step detect_de                "Desktop environment detection"
-	read -p "Pause?: " PAUSED
 
     # Software installation
     sleep 1
     display_step "oftware installation"
     little_step install_software         "Software installation"
-	read -p "Pause?: " PAUSED
 
     # Final wrap-up
     sleep 1
     endscript "${start_time}"
-	read -p "Pause?: " PAUSED
 }
 
 # Launch main procedure
