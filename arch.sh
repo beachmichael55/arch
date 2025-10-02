@@ -210,9 +210,8 @@ function install_aur() {
 			sudo sed -i 's/#UpgradeMenu/UpgradeMenu/' /etc/paru.conf
 			echo "Enabling NewsOnUpgrade option for paru"
 			sudo sed -i 's/#NewsOnUpgrade/NewsOnUpgrade/' /etc/paru.conf
-			echo ""
-			if ! grep -qxF \"SkipReview\" \"/etc/paru.conf\"; then sudo sh -c 'echo \"SkipReview\" >> \"/etc/paru.conf\"'; fi \
 			echo "Enabling SkipReview option for paru"
+			sudo sed -i 's/#SkipReview/SkipReview/' /etc/paru.conf
 }
 function install_headers() {
     local kernel_headers=()
