@@ -152,7 +152,7 @@ EOT
 		if ask_question "Do you want to install and setup 'Archlinuxcn Repository' ${RED}say No if unsure${RESET}?"; then
 			# Adds the repository to pacman and imports it's keys
 			echo "Adding Archlinuxcn repo"
-			echo -e '\n[archlinuxcn]\nServer = https://repo.archlinuxcn.org/\$arch' | sudo tee -a /etc/pacman.conf
+			echo -e '\n[archlinuxcn]\nServer = https://repo.archlinuxcn.org/$arch' | sudo tee -a /etc/pacman.conf
 			sudo pacman -Sy && sudo pacman -S archlinuxcn-keyring
 			sudo pacman -Syyu --noconfirm
 		fi
