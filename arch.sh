@@ -118,7 +118,7 @@ config_pacman() {
 		echo "Color output is already enabled.."
 	fi
 	# Enable verbose package lists
-	if ! grep -q "^\#VerbosePkgLists\]" /etc/pacman.conf; then
+	if ! grep -q "^#VerbosePkgLists" /etc/pacman.conf; then
         echo "Enabling Verbose package lists..."
 		sudo sed -i 's/^#VerbosePkgLists$/VerbosePkgLists/' '/etc/pacman.conf'
 	else
@@ -219,7 +219,9 @@ function install_headers() {
         [ -e "${kernel}" ] || continue
         kernel_headers+=("$(basename "${kernel}" | sed -e 's/vmlinuz-//')-headers")
     done
-    install_package "${kernel_headers[*]}"
+    for header in "${kernel_headers[@]}"; do
+		install_package "$header"
+	done
 }
 function configure_sysctl_tweaks() {
     local sysctl_file="/etc/sysctl.d/99-architect-kernel.conf"
