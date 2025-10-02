@@ -176,7 +176,7 @@ function install_aur() {
 	# Prompt user only if neither is installed
     if [[ -z "$AUR" ]]; then
 		prompt_choice AUR "Which AUR helper do you want to install? ${CYAN}(yay/paru)${RESET}:" "yay" "paru"
-		if [[ "$AUR" == "yay "]]; then
+		if [[ "$AUR" == "yay" ]]; then
 			echo "Installing yay..."
 			git clone https://aur.archlinux.org/yay-bin.git
 			cd yay-bin || exit
