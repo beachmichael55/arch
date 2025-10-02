@@ -189,7 +189,6 @@ function install_aur() {
 			yay -Y --devel --save
 			echo "Enabling SudoLoop option for yay"
 			sed -i 's/\"sudoloop\": false,/\"sudoloop\": true,/' ~/.config/yay/config.json
-			
 		fi
 		if [[ "$AUR" == "paru" ]]; then
 			echo "Installing paru..."
