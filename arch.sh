@@ -212,6 +212,7 @@ function install_aur() {
 			echo "Enabling SkipReview option for paru"
 			sudo sed -i 's/#SkipReview/SkipReview/' /etc/paru.conf
 			fi
+	fi
 }
 function install_headers() {
     local kernel_headers=()
