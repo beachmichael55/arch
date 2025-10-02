@@ -212,7 +212,7 @@ function install_aur() {
 			sudo sed -i 's/#NewsOnUpgrade/NewsOnUpgrade/' /etc/paru.conf
 			echo ""
 			if ! grep -qxF \"SkipReview\" \"/etc/paru.conf\"; then sudo sh -c 'echo \"SkipReview\" >> \"/etc/paru.conf\"'; fi \
-                Enabling SkipReview option for paru
+			echo "Enabling SkipReview option for paru"
 		fi
 }
 function install_headers() {
