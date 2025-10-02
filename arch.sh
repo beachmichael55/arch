@@ -446,6 +446,7 @@ sudo pacman --noconfirm -Su"
         if [[ -f /usr/bin/${name} ]]; then
             sudo rm /usr/bin/${name}
         fi
+	done
         # Use tee with an EOF block to install the script
         sudo tee /usr/bin/${name} > /dev/null << EOF
 #!/bin/bash
