@@ -67,7 +67,7 @@ function check_internet() {
     return 0
 }
 # Function to check and install a package
-install_package() {
+function install_package() {
     local package="$1"
     if pacman -Qi "$package" &> /dev/null; then
         echo "Package '$package' is already installed. Skipping..."
@@ -89,7 +89,7 @@ install_package() {
         return 1
     fi
 }
-uninstall_package() {
+function uninstall_package() {
     local package="$1"
     if ! pacman -Qi "$package" &> /dev/null; then
         echo "Package '$package' is not installed. Skipping..."
@@ -109,7 +109,7 @@ uninstall_package() {
 }
 ###########################################################################
 # Function to check and enable multilib repository
-config_pacman() {
+function config_pacman() {
 	# Enable color output in pacman
 	if ! grep -q "^#Color" /etc/pacman.conf; then
 		echo "Enabling color output in pacman..."
