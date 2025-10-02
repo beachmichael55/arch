@@ -13,8 +13,8 @@ GREY=$(tput setaf 8)
 
 if [ "$(id -u)" -eq 0 ]; then
     echo -e "${RED}Error: Do not run this script as root or with sudo.${RESET}"
-    echo -e "${YELLOW}This script is designed to be run as a regular user with sudo privileges.${RESET}"
-    echo -e "${YELLOW}It will prompt for sudo rights when necessary during the setup process.${RESET}"
+    echo -e "${ORANGE}This script is designed to be run as a regular user with sudo privileges.${RESET}"
+    echo -e "${ORANGE}It will prompt for sudo rights when necessary during the setup process.${RESET}"
     exit 1
 fi
 # Prompt user for a choice between two options
@@ -549,7 +549,7 @@ function video_drivers() {
 	while true; do
         read -rp "Select your GPU by number (1-${#valid_gpus[@]}) or press Enter to skip: " choice
         if [[ -z "$choice" ]]; then
-            echo -e "${YELLOW}Skipping GPU driver installation.${RESET}"
+            echo -e "${ORANGE}Skipping GPU driver installation.${RESET}"
             return 0
         elif [[ "$choice" =~ ^[1-4]$ ]]; then
             index=$((choice - 1))
@@ -1175,9 +1175,9 @@ fi
     fi
 }
 # Main installation
-echo -e "${YELLOW}It will automatically download and use yay to install the required software. The multilib repository will also be enabled automatically.${RESET}"
-echo -e "${YELLOW}Please ensure that you have a backup of your important data before proceeding.${RESET}"
-echo -e "${YELLOW}Do you want to proceed? (y/n)${RESET}"
+echo -e "${ORANGE}It will automatically download and use yay to install the required software. The multilib repository will also be enabled automatically.${RESET}"
+echo -e "${ORANGE}Please ensure that you have a backup of your important data before proceeding.${RESET}"
+echo -e "${ORANGE}Do you want to proceed? (y/n)${RESET}"
 read -r response
 if [[ ! "$response" =~ ^[Yy]$ ]]; then
     echo -e "${RED}Installation aborted.${RESET}"
