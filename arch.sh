@@ -154,6 +154,7 @@ EOT
 			echo "Adding Archlinuxcn repo"
 			echo -e '\n[archlinuxcn]\nServer = https://repo.archlinuxcn.org/\$arch' | sudo tee -a /etc/pacman.conf
 			sudo pacman -Sy && sudo pacman -S archlinuxcn-keyring
+			sudo pacman -Syyu --noconfirm
 		fi
 	else
 		echo "Archlinuxcn Repository is already enabled..."
