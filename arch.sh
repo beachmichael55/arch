@@ -116,7 +116,6 @@ source src/system/usergroups.sh
 source src/system/audio.sh
 source src/system/bootloader.sh
 source src/system/flatpak.sh
-source src/system/bash_aliases.sh
 
 # Display a big step with a visual separator
 function display_step() {
@@ -160,34 +159,33 @@ function main() {
     display_step "Initialization"
     init_log
     header
-read -n1 -p "Press any key to continue"
+
     # System configuration
     display_step "System preparation"
     sleep 1
     little_step config_pacman            "Pacman configuration"
-	read -n1 -p "Press any key to continue"
+
     little_step install_aur              "AUR helper installation"
-	read -n1 -p "Press any key to continue"
+
     little_step mirrorlist               "Mirrorlist configuration"
-	read -n1 -p "Press any key to continue"
+
     little_step install_headers          "Kernel headers installation"
-	read -n1 -p "Press any key to continue"
+
     little_step configure_sysctl_tweaks  "Kernel tweaks"
-	read -n1 -p "Press any key to continue"
+
     little_step sound_server             "Sound server configuration"
-	read -n1 -p "Press any key to continue"
+
     little_step setup_system_loaders     "System loaders configuration"
-	read -n1 -p "Press any key to continue"
+
 	little_step setup_flatpak			 "Flatpak setup"
-	read -n1 -p "Press any key to continue"
+
     little_step usefull_package          "Useful package installation"
-	read -n1 -p "Press any key to continue"
+
     little_step configure_sysctl_tweaks  "sysctl kernel tweaks"
-	read -n1 -p "Press any key to continue"
+
     little_step firewall                 "Firewall installation"
-	
     # little_step apparmor                 "Apparmor installation"
-	read -n1 -p "Press any key to continue"
+
     little_step shell_config             "Shell configuration"
 	read -n1 -p "Press any key to continue"
     little_step add_groups_to_user       "Adding user to necessary groups"
@@ -196,18 +194,21 @@ read -n1 -p "Press any key to continue"
     display_step "System configuration"
     sleep 1
     little_step video_drivers            "Video drivers installation"
+	read -n1 -p "Press any key to continue"
     little_step gamepad                  "Gamepad configuration"
+	read -n1 -p "Press any key to continue"
     little_step printer                  "Printer configuration"
+	read -n1 -p "Press any key to continue"
     little_step bluetooth                "Bluetooth configuration"
 
     # Desktop environment configuration
     display_step "Environment configuration"
     sleep 1
     little_step detect_de                "Desktop environment detection"
-
+read -n1 -p "Press any key to continue"
     # Software installation
     sleep 1
-    display_step "oftware installation"
+    display_step "Software installation"
     little_step install_software         "Software installation"
 
     # Final wrap-up
