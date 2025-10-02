@@ -1188,6 +1188,7 @@ sudo -v
 # Keep sudo rights
 while true; do sudo -n true; sleep 60; kill -0 "$$" || exit; done 2>/dev/null &
 sudo pacman -Syyu --noconfirm
+read -n1 -p "Press any key to continue"
 check_os
 check_internet
 config_pacman
