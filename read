@@ -1,1 +1,11 @@
-read me lol
+**Note:** If you are using an **NVIDIA GPU**, it must be from the **16xx (Turing) series or newer** to use the **`nvidia-open-dkms`** driver (open kernel modules).  
+
+> If you own a **Pascal GTX 10xx** or an **older GPU** (e.g., **Maxwell**, **Kepler**, or earlier such as **GTX 9xx / 8xx / 7xx**), you need the **proprietary driver** instead.  
+
+```bash
+sudo pacman -S --needed git \
+  && git clone https://github.com/beachmichael55/arch \
+  && cd ~/arch \
+  && chmod +x ./arch.sh \
+  && ./arch.sh
+```
