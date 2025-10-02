@@ -151,7 +151,6 @@ function little_step() {
 function main() {
     check_os
     check_internet || exit 1
-	read -n1 -p "Press any key to continue"
 
     local -r start_time="$(date +%s)"
 
