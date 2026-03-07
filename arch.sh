@@ -179,10 +179,10 @@ function install_aur() {
 		prompt_choice AUR "Which AUR helper do you want to install? ${CYAN}(yay/paru)${RESET}:" "yay" "paru"
 		if [[ "$AUR" == "yay" ]]; then
 			echo "Installing yay..."
-			git clone https://aur.archlinux.org/yay-bin.git
-			cd yay-bin || exit
+			git clone https://aur.archlinux.org/yay.git
+			cd yay || exit
 			makepkg -si --noconfirm
-			cd .. && rm -rf yay-bin
+			cd .. && rm -rf yay
 			export PATH="$PATH:$HOME/.local/bin"
 			echo "Generating DB for $AUR"
 			yay -Y --gendb
@@ -193,10 +193,10 @@ function install_aur() {
 		fi
 		if [[ "$AUR" == "paru" ]]; then
 			echo "Installing paru..."
-			git clone https://aur.archlinux.org/paru-bin.git
-			cd paru-bin || exit
+			git clone https://aur.archlinux.org/paru.git
+			cd paru || exit
 			makepkg -si --noconfirm
-			cd .. && rm -rf paru-bin
+			cd .. && rm -rf paru
 			export PATH="$PATH:$HOME/.local/bin"
 			echo "Auto-updating Git-based AUR packages"
 			paru --gendb
