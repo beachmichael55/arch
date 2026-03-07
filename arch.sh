@@ -292,7 +292,7 @@ EOF
 function setup_sound() {
  ########################################################### TEST THIS ###########################################################
     # Packages to install for modern audio stack
-	local packages=("pipewire" "wireplumber" "pipewire-alsa" "pipewire-jack" "pipewire-pulse" "gst-plugin-pipewire" "alsa-utils" "libpulse" "alsa-plugins" "alsa-firmware" "alsa-ucm-conf" "sof-firmware" "rtkit")
+	local packages=("pipewire" "wireplumber" "pipewire-alsa" "pipewire-pulse" "gst-plugin-pipewire" "alsa-utils" "libpulse" "alsa-plugins" "alsa-ucm-conf" "sof-firmware" "rtkit")
 	for pkg in "${packages[@]}"; do
 		install_package "$pkg"
 	done
