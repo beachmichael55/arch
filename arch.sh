@@ -89,6 +89,21 @@ function install_package() {
         return 1
     fi
 }
+function install_flatpaks() {
+	local package="$1"
+	if command -v flatpak &> /dev/null && flatpak list | grep -q "$package"; then
+			echo "Package '$package' is already installed via Flatpak. Skipping..."
+			return
+		fi
+		echo "Package '$package' is not installed. Attempting to install..."
+		if command -v flatpak &> /dev/null; then
+			echo "Attempting to install '$package' via Flatpak..."
+			flatpak install -y flathub "$package" || {
+				echo "Package '$package' could not be installed via Flatpak."
+			return 1
+			}
+		fi
+}
 function uninstall_package() {
     local package="$1"
     if ! pacman -Qi "$package" &> /dev/null; then
@@ -378,11 +393,11 @@ function setup_flatpak() {
     flatpak update -y
 }
 function usefull_packages() {
-		local packages=("gstreamer" "gst-plugins-base" "gstreamer-vaapi" "gst-plugins-good" "gst-libav" "gstreamer-vaapi" "libva-mesa-driver" "mesa-vdpau" \
-        "xdg-utils" "rebuild-detector" "fastfetch" "power-profiles-daemon" "ttf-dejavu" "ttf-liberation" "ttf-meslo-nerd" "noto-fonts-emoji" "adobe-source-code-pro-fonts" \
-        "otf-font-awesome" "ttf-droid" "ntfs-3g" "fuse2" "fuse2fs" "fuse3" "exfatprogs" "bash-completion" "ffmpegthumbs" "man-db" "man-pages" "lsscsi" "mtools" "sg3_utils" \
+		local packages=("gstreamer" "gst-plugins-base" "gstreamer-vaapi" "gst-plugins-good" "gst-libav" "gstreamer-vaapi" "libva-mesa-driver" "mesa-vdpau" "libnotify" "openbsd-netcat" \
+        "xdg-utils" "rebuild-detector" "fastfetch" "power-profiles-daemon" "ttf-dejavu" "ttf-liberation" "ttf-meslo-nerd" "noto-fonts-emoji" "adobe-source-code-pro-fonts" "freerdp-git" "iproute2" \
+        "otf-font-awesome" "ttf-droid" "ntfs-3g" "fuse2" "fuse2fs" "fuse3" "exfatprogs" "bash-completion" "ffmpegthumbs" "man-db" "man-pages" "lsscsi" "mtools" "sg3_utils" "dialog" \
 		"efitools" "nfs-utils" "ntp" "unrar" "unzip" "libgsf" "networkmanager-openvpn" "networkmanager-l2tp" "network-manager-applet" "cpupower" "nano-syntax-highlighting" \
-		"xdg-desktop-portal" "btop" "duf" "pv" "jq" "rsync" "duperemove" "curl" "iperf3" "python-pip" "wine-staging" "jre-openjdk" "dkms" "xorg-server" "xorg-xinit" "xwaylandvideobridge")
+		"xdg-desktop-portal" "btop" "duf" "pv" "jq" "rsync" "duperemove" "curl" "iperf3" "python-pip" "wine-staging" "jre-openjdk" "dkms" "xorg-server" "xorg-xinit" "xwaylandvideobridge" "libappindicator")
 	for pkg in "${packages[@]}"; do
 		install_package "$pkg"
 	done
@@ -794,21 +809,13 @@ function detect_de() {
     local desktop_env="${XDG_CURRENT_DESKTOP,,}"
     # Match known desktop environments and run the corresponding setup
     case "$desktop_env" in
-        *gnome*)
-            detected="GNOME"
-            install_gnome
-            ;;
         *kde*|*plasma*)
             detected="KDE"
             install_kde
             ;;
-        *xfce*)
-            detected="XFCE"
-            install_xfce
-            ;;
         *)
             detected="OTHER"
-            echo "No supported DE detected (GNOME, KDE, XFCE). Skipping DE configuration."
+            echo "No supported DE detected. Skipping DE configuration."
             return
             ;;
     esac
@@ -836,93 +843,72 @@ function install_kde() {
 	echo "Setting Numlock=on for SDDM"
     echo -e '[General]\nNumlock=on' | sudo tee -a /etc/sddm.conf
 }
-function install_gnome() {
-    # Define a list of GNOME applications to install
-		local packages=("gnome" "gnome-tweaks" "gnome-calculator" "gnome-console" "gnome-control-center" "gnome-disk-utility" "gnome-keyring" "gnome-nettool" "gnome-power-manager" "gnome-shell" \
-        "gnome-text-editor" "gnome-themes-extra" "gnome-browser-connector" "adwaita-icon-theme" "loupe" "papers" "gdm" "gvfs" "gvfs-afc" "gvfs-gphoto2" "gvfs-mtp" "gvfs-nfs" "gvfs-smb" "nautilus" \
-        "nautilus-sendto" "sushi" "totem" "xdg-user-dirs-gtk" "adw-gtk-theme" "snapshot" "qt6-wayland")	
-		for pkg in "${packages[@]}"; do
-			install_package "$pkg"
-		done
-    # Set the GTK theme to adw-gtk3
-	echo "Setting gtk theme to adw-gtk3"
-    gsettings set org.gnome.desktop.interface gtk-theme adw-gtk3
-    # Enable Numlock on startup
-	echo "Enabling numlock on startup"
-    gsettings set org.gnome.desktop.peripherals.keyboard numlock-state true
-    # Disable GDM rules to unlock Wayland
-	echo "Disable GDM rules to unlock Wayland"
-    sudo ln -s /dev/null /etc/udev/rules.d/61-gdm.rules
-}
-function install_xfce() {
-	local packages=("xfce4" "xfce4-goodies" "pavucontrol" "gvfs" "xarchiver" "xfce4-battery-plugin" "xfce4-datetime-plugin" "xfce4-mount-plugin" "xfce4-netload-plugin" \
-	"xfce4-notifyd" "xfce4-pulseaudio-plugin" "xfce4-screensaver" "xfce4-screenshooter" "xfce4-taskmanager" "xfce4-wavelan-plugin" "xfce4-weather-plugin" "xfce4-whiskermenu-plugin" \
-	"xfce4-xkb-plugin" "xdg-desktop-portal-xapp" "xdg-user-dirs-gtk" "network-manager-applet" "xfce4-notifyd" "gnome-keyring" "mugshot" "xdg-user-dirs" "blueman" "file-roller" \
-	"galculator" "gvfs-afc" "gvfs-gphoto2" "gvfs-mtp" "gvfs-nfs" "gvfs-smb" "lightdm" "lightdm-slick-greeter" "network-manager-applet" "parole" "ristretto" \
-	"thunar-archive-plugin" "thunar-media-tags-plugin" "xed")
-	for pkg in "${packages[@]}"; do
-		install_package "$pkg"
-	done
-	echo "Updating user directories"
-    xdg-user-dirs-update
-}
-function usefull_packages() {
+function install_software() {
 	local packages=("gamemode" "lib32-gamemode" "mangohud" "lib32-mangohud" "gamescope" "restic" "" "mame-tools" "lutris" "steam" "firefox" "mousetweaks" "aegisub" "mediainfo-gui" "vlc" "obs-studio" "switcheroo" \
 		"converseen" "krita" "arch-update" "vim" "audacity" "wireshark-qt" "iperf3" "ekpar2" "remmina" "thunderbird" "syncthing" "keepassxc" "calibre" "qbittorrent" "libreoffice-fresh" "rclone-browser" \
-		"k3b" "distrobox" "meld" "discord" )
+		"k3b" "distrobox" "meld" "discord" "prismlauncher" "docker" "docker-compose")
+	local flatpaks=("com.protonvpn.www" "com.github.Bleuzen.FFaudioConverter" "com.github.nrittsti.NTag" "net.mkiol.SpeechNote" "com.heroicgameslauncher.hgl" "org.freedesktop.Platform.VulkanLayer.vkBasalt//24.08" \
+	"com.vysp3r.ProtonPlus" "com.adamcake.Bolt" "org.freedesktop.Platform.VulkanLayer.MangoHud" "io.github.radiolamp.mangojuice" "org.freedesktop.Platform.VulkanLayer.gamescope" "com.github.Matoking.protontricks" \
+	"net.davidotek.pupgui2" "com.github.mtkennerly.ludusavi" "com.rustdesk.RustDesk" "com.github.tchx84.Flatseal" "io.github.Faugus.faugus-launcher" "com.georgefb.mangareader" "com.github.zocker_160.SyncThingy" \
+	"com.steamgriddb.SGDBoop" "com.steamgriddb.steam-rom-manager" "com.usebottles.bottles" "com.valvesoftware.SteamLink" "fr.handbrake.ghb" "info.febvre.Komikku" "io.github.dvlv.boxbuddyrs" "io.github.hakuneko.HakuNeko" \
+	"io.github.ilya_zlobintsev.LACT" "io.github.peazip.PeaZip" "io.github.shiiion.primehack" "org.chromium.Chromium" "io.gitlab.adhami3310.Converter" "io.missioncenter.MissionCenter" "it.mijorus.gearlever" \
+	"org.bionus.Grabber" "org.DolphinEmu.dolphin-emu" "org.freefilesync.FreeFileSync" "org.jdownloader.JDownloader" "org.x.Warpinator")
+	# Installs vmware from AUR
+		#install_package "vmware-workstation"
+	###
 	for pkg in "${packages[@]}"; do
 		install_package "$pkg"
 		# Arch Update
-    if [[ "${packages}" =~ "arch-update" ]]; then
-		echo "Enable arch-update.timer"
-        systemctl --user enable arch-update.timer
-		echo "Enable arch-update tray"
-        arch-update --tray --enable
-    fi
-    if [[ "${packages}" =~ "openrazer-daemon" ]]; then
-		echo "Add the current user to the plugdev group"
-        sudo usermod -aG plugdev $(whoami)
-    fi
-    if [[ "${packages}" =~ "virtualbox" ]]; then
-		echo "Add the current user to the vboxusers group"
-        sudo usermod -aG vboxusers $(whoami)
-		echo "Enable vboxweb"
-        sudo systemctl enable vboxweb.service
-    fi
-    if [[ "${packages}" =~ "virt-manager" ]]; then
-		echo "Add the current user to the libvirt group"
-        sudo usermod -aG libvirt $(whoami)
-		echo "Add the current user to the kvm group"
-        sudo usermod -aG kvm $(whoami)
-		echo "Enable libvirtd"
-        sudo systemctl enable --now libvirtd
-        # Configure libvirtd socket (permissions)
-        sudo sed -i 's/#unix_sock_group = "libvirt"/unix_sock_group = "libvirt"/' /etc/libvirt/libvirtd.conf
-        sudo sed -i 's/#unix_sock_rw_perms = "0770"/unix_sock_rw_perms = "0770"/' /etc/libvirt/libvirtd.conf
-        # -- Open relevant ports if firewalld is installed
-        if command -v firewall-cmd >/dev/null 2>&1; then
-            sudo firewall-cmd --permanent --add-service=libvirt &> /dev/null
-            sudo firewall-cmd --permanent --add-port=5900-5999/tcp &> /dev/null
-            sudo firewall-cmd --permanent --add-port=16509/tcp &> /dev/null
-            sudo firewall-cmd --permanent --add-port=5666/tcp &> /dev/null
-            sudo firewall-cmd --reload &> /dev/null
-        fi
-        # -- Open the same ports if ufw is installed
-        if command -v ufw >/dev/null 2>&1; then
-            sudo ufw allow 5900:5999/tcp
-            sudo ufw allow 16509/tcp
-            sudo ufw allow 5666/tcp
-            sudo ufw reload &> /dev/null
-        fi
-    fi
-    # Gamemode
-    if [[ "${packages}" =~ "gamemode" ]]; then
-		echo "Add the current user to the gamemode group"
-        sudo usermod -aG gamemode $(whoami)
-	fi
-        # Default configuration for /etc/gamemode.ini
-	if [ ! -f /etc/gamemode.ini ]; then
-	sudo tee /etc/gamemode.ini > /dev/null <<EOF
+		if [[ "${packages}" =~ "arch-update" ]]; then
+			echo "Enable arch-update.timer"
+			systemctl --user enable arch-update.timer
+			echo "Enable arch-update tray"
+			arch-update --tray --enable
+		fi
+		if [[ "${packages}" =~ "openrazer-daemon" ]]; then
+			echo "Add the current user to the plugdev group"
+			sudo usermod -aG plugdev $(whoami)
+		fi
+		if [[ "${packages}" =~ "virtualbox" ]]; then
+			echo "Add the current user to the vboxusers group"
+			sudo usermod -aG vboxusers $(whoami)
+			echo "Enable vboxweb"
+			sudo systemctl enable vboxweb.service
+		fi
+		if [[ "${packages}" =~ "virt-manager" ]]; then
+			echo "Add the current user to the libvirt group"
+			sudo usermod -aG libvirt $(whoami)
+			echo "Add the current user to the kvm group"
+			sudo usermod -aG kvm $(whoami)
+			echo "Enable libvirtd"
+			sudo systemctl enable --now libvirtd
+			# Configure libvirtd socket (permissions)
+			sudo sed -i 's/#unix_sock_group = "libvirt"/unix_sock_group = "libvirt"/' /etc/libvirt/libvirtd.conf
+			sudo sed -i 's/#unix_sock_rw_perms = "0770"/unix_sock_rw_perms = "0770"/' /etc/libvirt/libvirtd.conf
+			# -- Open relevant ports if firewalld is installed
+			if command -v firewall-cmd >/dev/null 2>&1; then
+				sudo firewall-cmd --permanent --add-service=libvirt &> /dev/null
+				sudo firewall-cmd --permanent --add-port=5900-5999/tcp &> /dev/null
+				sudo firewall-cmd --permanent --add-port=16509/tcp &> /dev/null
+				sudo firewall-cmd --permanent --add-port=5666/tcp &> /dev/null
+				sudo firewall-cmd --reload &> /dev/null
+			fi
+			# -- Open the same ports if ufw is installed
+			if command -v ufw >/dev/null 2>&1; then
+				sudo ufw allow 5900:5999/tcp
+				sudo ufw allow 16509/tcp
+				sudo ufw allow 5666/tcp
+				sudo ufw reload &> /dev/null
+			fi
+		fi
+		# Gamemode
+		if [[ "${packages}" =~ "gamemode" ]]; then
+			echo "Add the current user to the gamemode group"
+			sudo usermod -aG gamemode $(whoami)
+		fi
+			# Default configuration for /etc/gamemode.ini
+		if [ ! -f /etc/gamemode.ini ]; then
+		sudo tee /etc/gamemode.ini > /dev/null <<EOF
 [general]
 reaper_freq=5
 desiredgov=performance
@@ -962,26 +948,29 @@ disable_splitlock=1
 ;script_timeout=10'
 EOF
 fi
-    # Firewall
-    if [[ "${packages}" =~ "steam" ]]; then
-        if command -v firewall-cmd >/dev/null 2>&1; then
-            # Steam Remote Play https://help.steampowered.com/en/faqs/view/0689-74B8-92AC-10F2
-            sudo firewall-cmd --permanent --add-port=27031-27036/udp &> /dev/null
-            sudo firewall-cmd --permanent --add-port=27036/tcp &> /dev/null
-            sudo firewall-cmd --permanent --add-port=27037/tcp &> /dev/null
-            sudo firewall-cmd --reload &> /dev/null
-        fi
-        if command -v ufw >/dev/null 2>&1; then
-            # Steam Remote Play https://help.steampowered.com/en/faqs/view/0689-74B8-92AC-10F2
-            sudo ufw allow 27031:27036/udp
-            sudo ufw allow 27036/tcp
-            sudo ufw allow 27037/tcp
-            sudo ufw reload &> /dev/null
-        fi
-    fi
+		# Firewall
+		if [[ "${packages}" =~ "steam" ]]; then
+			if command -v firewall-cmd >/dev/null 2>&1; then
+				# Steam Remote Play https://help.steampowered.com/en/faqs/view/0689-74B8-92AC-10F2
+				sudo firewall-cmd --permanent --add-port=27031-27036/udp &> /dev/null
+				sudo firewall-cmd --permanent --add-port=27036/tcp &> /dev/null
+				sudo firewall-cmd --permanent --add-port=27037/tcp &> /dev/null
+				sudo firewall-cmd --reload &> /dev/null
+			fi
+			if command -v ufw >/dev/null 2>&1; then
+				# Steam Remote Play https://help.steampowered.com/en/faqs/view/0689-74B8-92AC-10F2
+				sudo ufw allow 27031:27036/udp
+				sudo ufw allow 27036/tcp
+				sudo ufw allow 27037/tcp
+				sudo ufw reload &> /dev/null
+			fi
+		fi
 	done
+# Flatpak installation
+for fpkg in "${flatpaks[@]}"; do
+		install_flatpaks "$fpkg"
+		done
 }
-    
 # Main installation
 echo -e "${ORANGE}It will automatically download and use yay to install the required software. The multilib repository will also be enabled automatically.${RESET}"
 echo -e "${ORANGE}Please ensure that you have a backup of your important data before proceeding.${RESET}"
@@ -1002,27 +991,19 @@ config_pacman
 install_aur
 install_headers
 configure_sysctl_tweaks
-setup_sound
 setup_boot_loaders
+setup_sound
 setup_flatpak
 usefull_packages
-
-firewall
-read -n1 -p "Press any key to continue"
-shell_config
-read -n1 -p "Press any key to continue"
-add_groups_to_user
-read -n1 -p "Press any key to continue"
-video_drivers
-read -n1 -p "Press any key to continue"
-gamepad
-read -n1 -p "Press any key to continue"
-printer
-read -n1 -p "Press any key to continue"
-bluetooth
-read -n1 -p "Press any key to continue"
 detect_de
-read -n1 -p "Press any key to continue"
+firewall
+video_drivers
+install_software
+shell_config
+gamepad
+printer
+bluetooth
+add_groups_to_user
 # Ask about restart
 echo -e "${GREEN}Script completed succesfully. Do you want to restart your system to apply all changes now?(y/n)${RESET}"
 read -r restart_response
@@ -1031,23 +1012,3 @@ if [[ "$restart_response" =~ ^[Yy]$ ]]; then
 else
     echo -e "${RED}No restart selected${RESET}"
 fi
-
-#		["ProtonVPN(Protons VPN app)"]="proton-vpn-gtk-app|com.protonvpn.www"
-
-#		["Notepadqq(advanced text editor)"]="|com.notepadqq.Notepadqq"
-#		["FFaudioConverter(graphical audio converter)"]="|com.github.Bleuzen.FFaudioConverter"
-#		["NTag(graphical audio tag editor)"]="|com.github.nrittsti.NTag"
-#		["SpeechNote(offline Speech to Text, Text to Speech)"]="net.mkiol.SpeechNote"
-#       ["Heroic Games Launcher(Game Launcher/Manager/Store) Only:AURT"]="com.heroicgameslauncher.hgl"
-#        ["Prism Launcher (Minecraft)"]="prismlauncher|org.prismlauncher.PrismLauncher"
-#		["vkBasalt (Vulkan post processing layer-ReShade)"]="org.freedesktop.Platform.VulkanLayer.vkBasalt//24.08"
-#		["ProtonPlus (Manage supported compatibility tools across supported launchers)"]="com.vysp3r.ProtonPlus"
-#       ["RuneLite (Old School RuneScape client)"]="|net.runelite.RuneLite"
-
-#		["Goverlay/Mangohud (GUI to help manage Vulkan/OpenGL overlays)"]=" goverlay org.freedesktop.Platform.VulkanLayer.MangoHud org.freedesktop.Platform.VulkanLayer.MangoHud org.freedesktop.Platform.VulkanLayer.gamescope"
-#		["ProtonTricks (Apps and fixes for Proton games)"]="com.github.Matoking.protontricks"
-#       ["Gamemode (Daemon that allows games to request a set of optimisations)"]=""
-#		["ProtonUp QT (Install Wine- and Proton-based compatibility tools)"]="net.davidotek.pupgui2"
-#		["Moonlight (Client for Sunshine server)"]="moonlight-qt|com.moonlight_stream.Moonlight"
-#		["Sunshine (Self-hosted game stream host for Moonlight)"]="dev.lizardbyte.app.Sunshine"
-#		["Ludusavi (backing up your PC video game save data)"]="com.github.mtkennerly.ludusavi"
