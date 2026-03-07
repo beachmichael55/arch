@@ -1193,25 +1193,63 @@ sudo -v
 # Keep sudo rights
 while true; do sudo -n true; sleep 60; kill -0 "$$" || exit; done 2>/dev/null &
 sudo pacman -Syyu --noconfirm
+echo "update system"
 read -n1 -p "Press any key to continue"
 check_os
+echo "check os"
+read -n1 -p "Press any key to continue"
 check_internet
+echo "check_internet"
+read -n1 -p "Press any key to continue"
 config_pacman
+echo "config_pacman"
+read -n1 -p "Press any key to continue"
 install_aur
+echo "install_aur"
+read -n1 -p "Press any key to continue"
 install_headers
+echo "install_headers"
+read -n1 -p "Press any key to continue"
 configure_sysctl_tweaks
+echo "configure_sysctl_tweaks"
+read -n1 -p "Press any key to continue"
+echo "configure_sysctl_tweaks"
 setup_sound
+read -n1 -p "Press any key to continue"
+echo "setup_sound"
 setup_boot_loaders
+read -n1 -p "Press any key to continue"
+echo "setup_boot_loaders"
 setup_flatpak
+read -n1 -p "Press any key to continue"
+echo "setup_flatpak"
 usefull_packages
+read -n1 -p "Press any key to continue"
+echo "usefull_packages"
 firewall
+read -n1 -p "Press any key to continue"
+echo "firewall"
 shell_config
+read -n1 -p "Press any key to continue"
+echo "shell_config"
 add_groups_to_user
+read -n1 -p "Press any key to continue"
+echo "add_groups_to_user"
 video_drivers
+read -n1 -p "Press any key to continue"
+echo "video_drivers"
 gamepad
+read -n1 -p "Press any key to continue"
+echo "gamepad"
 printer
+read -n1 -p "Press any key to continue"
+echo "printer"
 bluetooth
+read -n1 -p "Press any key to continue"
+echo "bluetooth"
 detect_de
+read -n1 -p "Press any key to continue"
+echo "detect_de"
 # Ask about restart
 echo -e "${GREEN}Script completed succesfully. Do you want to restart your system to apply all changes now?(y/n)${RESET}"
 read -r restart_response
