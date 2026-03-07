@@ -871,8 +871,8 @@ function install_xfce() {
 # Define software choices for each category
 # -----------------------------------------------------------------------------
 function set_software_list() {
-set "FLAT=Flatpak"
-set "AURT=Aur"
+FLAT="Flatpak"
+AURT="Aur"
 # Declare associative arrays for each software category
 declare -A desktop_list
 declare -A desktop_list2
@@ -926,8 +926,7 @@ selected_packages=""
         ["Open Razer(Drivers/tools for Razer hardware)"]="openrazer-daemon libnotify polychromatic"
         ["Arch Update(An update notifier & applier)"]="arch-update vim"
 		["Virtualbox(Powerful x86 virtualization)"]="virtualbox virtualbox-host-dkms virtualbox-guest-iso"
-        ["Virtmanager(Desktop user interface for managing virtual machines)"]="qemu-full libvirt virt-manager virt-viewer dnsmasq vde2 /
-		bridge-utils openbsd-netcat dmidecode libguestfs guestfs-tools"
+        ["Virtmanager(Desktop user interface for managing virtual machines)"]="qemu-full libvirt virt-manager virt-viewer dnsmasq vde2 bridge-utils openbsd-netcat dmidecode libguestfs guestfs-tools"
     )
 
     picture_list=(
@@ -975,8 +974,7 @@ selected_packages=""
         ["RuneLite (Old School RuneScape client)"]="runelite|net.runelite.RuneLite"
     )
 	gaming_list2=(
-		["Goverlay/Mangohud (GUI to help manage Vulkan/OpenGL overlays)"]="mangohud lib32-mangohud gamescope goverlay org.freedesktop.Platform.VulkanLayer.MangoHud /
-		org.freedesktop.Platform.VulkanLayer.MangoHud org.freedesktop.Platform.VulkanLayer.gamescope"
+		["Goverlay/Mangohud (GUI to help manage Vulkan/OpenGL overlays)"]="mangohud lib32-mangohud gamescope goverlay org.freedesktop.Platform.VulkanLayer.MangoHud org.freedesktop.Platform.VulkanLayer.MangoHud org.freedesktop.Platform.VulkanLayer.gamescope"
 		["ProtonTricks (Apps and fixes for Proton games)"]="com.github.Matoking.protontricks"
         ["Gamemode (Daemon that allows games to request a set of optimisations)"]="gamemode lib32-gamemode"
 		["ProtonUp QT (Install Wine- and Proton-based compatibility tools)"]="net.davidotek.pupgui2"
@@ -1199,25 +1197,15 @@ sudo -v
 # Keep sudo rights
 while true; do sudo -n true; sleep 60; kill -0 "$$" || exit; done 2>/dev/null &
 sudo pacman -Syyu --noconfirm
-read -n1 -p "Press any key to continue"
 check_os
-read -n1 -p "Press any key to continue"
 check_internet
-read -n1 -p "Press any key to continue"
 config_pacman
-read -n1 -p "Press any key to continue"
 install_aur
-read -n1 -p "Press any key to continue"
 install_headers
-read -n1 -p "Press any key to continue"
 configure_sysctl_tweaks
-read -n1 -p "Press any key to continue"
 setup_sound
-read -n1 -p "Press any key to continue"
 setup_boot_loaders
-read -n1 -p "Press any key to continue"
 setup_flatpak
-read -n1 -p "Press any key to continue"
 usefull_packages
 read -n1 -p "Press any key to continue"
 install_software
