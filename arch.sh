@@ -294,7 +294,7 @@ EOF
 }
 function setup_sound() {
     # Packages to install for modern audio stack
-	local packages=("pipewire" "wireplumber" "pipewire-alsa" "pipewire-jack" "pipewire-pulse" "alsa-utils" "alsa-plugins" "alsa-firmware" "alsa-ucm-conf" "sof-firmware" "rtkit")
+	local packages=("pipewire" "wireplumber" "pipewire-alsa" "pipewire-jack" "pipewire-pulse" "gst-plugin-pipewire" "alsa-utils" "libpulse" "alsa-plugins" "alsa-firmware" "alsa-ucm-conf" "sof-firmware" "rtkit")
 	for pkg in "${packages[@]}"; do
 		install_package "$pkg"
 	done
@@ -370,7 +370,7 @@ function setup_flatpak() {
     flatpak update -y
 }
 function usefull_packages() {
-		local packages=("gstreamer" "gst-plugins-base" "gst-plugin-pipewire" "gstreamer-vaapi" "gst-plugins-good" "gst-libav" "gstreamer-vaapi" "libva-mesa-driver" "mesa-vdpau" \
+		local packages=("gstreamer" "gst-plugins-base" "gstreamer-vaapi" "gst-plugins-good" "gst-libav" "gstreamer-vaapi" "libva-mesa-driver" "mesa-vdpau" \
         "xdg-utils" "rebuild-detector" "fastfetch" "power-profiles-daemon" "ttf-dejavu" "ttf-liberation" "ttf-meslo-nerd" "noto-fonts-emoji" "adobe-source-code-pro-fonts" \
         "otf-font-awesome" "ttf-droid" "ntfs-3g" "fuse2" "fuse2fs" "fuse3" "exfatprogs" "bash-completion" "ffmpegthumbs" "man-db" "man-pages" "lsscsi" "mtools" "sg3_utils" \
 		"efitools" "nfs-utils" "ntp" "unrar" "unzip" "libgsf" "networkmanager-openvpn" "networkmanager-l2tp" "network-manager-applet" "cpupower" "nano-syntax-highlighting" \
