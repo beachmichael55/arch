@@ -112,29 +112,26 @@ function uninstall_package() {
 function config_pacman() {
 	# Enable color output in pacman
 	if ! grep -q "^#Color" /etc/pacman.conf; then
+		echo "Color output is already enabled.."
+	else
 		echo "Enabling color output in pacman..."
 		sudo sed -i 's/^#Color$/Color/' '/etc/pacman.conf'
-	else
-		echo "Color output is already enabled.."
 	fi
 	# Enable verbose package lists
 	if ! grep -q "^#VerbosePkgLists" /etc/pacman.conf; then
-        echo "Enabling Verbose package lists..."
-		sudo sed -i 's/^#VerbosePkgLists$/VerbosePkgLists/' '/etc/pacman.conf'
-	else
 		echo "Verbose package lists is already enabled.."
+	else
+		echo "Enabling Verbose package lists..."
+		sudo sed -i 's/^#VerbosePkgLists$/VerbosePkgLists/' '/etc/pacman.conf'
 	fi
 	# Enable Multilib(32bit) package lists
-    if ! grep -q "^\[multilib\]" /etc/pacman.conf; then
-        echo "Enabling multilib repository..."
-        sudo tee -a /etc/pacman.conf > /dev/null <<EOT
-[multilib]
-Include = /etc/pacman.d/mirrorlist
-EOT
-        echo "Multilib repository has been enabled."
-    else
-        echo "Multilib repository is already enabled."
-    fi
+    if grep -q "^#\[multilib\]" /etc/pacman.conf; then
+		echo "Enabling multilib repository..."
+		sudo sed -i '/\[multilib\]/,/Include/s/^#//' /etc/pacman.conf
+		echo "Multilib repository enabled."
+	else
+		echo "Multilib repository already enabled."
+	fi
 	# Full system upgrade
 	echo "Updating full system ${RED}(might be long)${RESET}"
     sudo pacman -Syyu --noconfirm
@@ -293,13 +290,12 @@ EOF
 	sudo sysctl --system
 }
 function setup_sound() {
+ ########################################################### TEST THIS ###########################################################
     # Packages to install for modern audio stack
 	local packages=("pipewire" "wireplumber" "pipewire-alsa" "pipewire-jack" "pipewire-pulse" "gst-plugin-pipewire" "alsa-utils" "libpulse" "alsa-plugins" "alsa-firmware" "alsa-ucm-conf" "sof-firmware" "rtkit")
 	for pkg in "${packages[@]}"; do
 		install_package "$pkg"
 	done
-	# Remove conflicting or outdated audio components
-	uninstall_package "jack2"
 }
 function grub-btrfs() {
     # Ask the user if they want to set up Timeshift and GRUB-Btrfs
@@ -321,6 +317,16 @@ function grub-btrfs() {
     fi
 }
 function setup_boot_loaders() {
+	Detects what bootloader is installed
+	if command -v efibootmgr &>/dev/null; then
+		if efibootmgr | grep -iq grub; then
+			BOOT_LOADER="grub"
+		elif efibootmgr | grep -iq systemd; then
+			BOOT_LOADER="systemd-boot"
+		elif efibootmgr | grep -iq refind; then
+			BOOT_LOADER="refind"
+		fi
+	fi
     echo "Checking if GRUB is installed"
     # Only continue if the system uses GRUB
     if [[ $BOOT_LOADER != "grub" ]]; then
@@ -354,10 +360,12 @@ EOF
     echo "Updating GRUB"
 	sudo grub-mkconfig -o /boot/grub/grub.cfg 
     # Install grub-btrfs if btrfs is used and package is not present
-    if ! pacman -Q grub-btrfs &> /dev/null && [[ ${BTRFS} == true ]]; then
+	fs_type=$(findmnt -n -o FSTYPE /)
+    if ! pacman -Q grub-btrfs &> /dev/null && [[ ${fs_type} == btrfs ]]; then
         grub-btrfs
     fi
 }
+
 function setup_flatpak() {
 	install_package flatpak
     # Add Flathub if not already added
@@ -378,7 +386,7 @@ function usefull_packages() {
 	for pkg in "${packages[@]}"; do
 		install_package "$pkg"
 	done
-    if [[ ${BTRFS} == true ]]; then
+    if [[ ${fs_type} == btrfs ]]; then
 		install_package "btrfs-progs"
 		install_package "btrfs-assistant"
 		install_package "btrfsmaintenance"
@@ -783,16 +791,14 @@ function bluetooth() {
 function detect_de() {
     local detected=""
     # Get the current desktop environment from standard environment variables
-    # Fallback to DESKTOP_SESSION if XDG_CURRENT_DESKTOP is not set
     local desktop_env="${XDG_CURRENT_DESKTOP,,}"
-    desktop_env="${desktop_env:-${DESKTOP_SESSION,,}}"
     # Match known desktop environments and run the corresponding setup
     case "$desktop_env" in
         *gnome*)
             detected="GNOME"
             install_gnome
             ;;
-        *plasma*|*kde*)
+        *kde*|*plasma*)
             detected="KDE"
             install_kde
             ;;
@@ -1193,63 +1199,44 @@ sudo -v
 # Keep sudo rights
 while true; do sudo -n true; sleep 60; kill -0 "$$" || exit; done 2>/dev/null &
 sudo pacman -Syyu --noconfirm
-echo "update system"
 read -n1 -p "Press any key to continue"
 check_os
-echo "check os"
 read -n1 -p "Press any key to continue"
 check_internet
-echo "check_internet"
 read -n1 -p "Press any key to continue"
 config_pacman
-echo "config_pacman"
 read -n1 -p "Press any key to continue"
 install_aur
-echo "install_aur"
 read -n1 -p "Press any key to continue"
 install_headers
-echo "install_headers"
 read -n1 -p "Press any key to continue"
 configure_sysctl_tweaks
-echo "configure_sysctl_tweaks"
 read -n1 -p "Press any key to continue"
-echo "configure_sysctl_tweaks"
 setup_sound
 read -n1 -p "Press any key to continue"
-echo "setup_sound"
 setup_boot_loaders
 read -n1 -p "Press any key to continue"
-echo "setup_boot_loaders"
 setup_flatpak
 read -n1 -p "Press any key to continue"
-echo "setup_flatpak"
 usefull_packages
 read -n1 -p "Press any key to continue"
-echo "usefull_packages"
+install_software
 firewall
 read -n1 -p "Press any key to continue"
-echo "firewall"
 shell_config
 read -n1 -p "Press any key to continue"
-echo "shell_config"
 add_groups_to_user
 read -n1 -p "Press any key to continue"
-echo "add_groups_to_user"
 video_drivers
 read -n1 -p "Press any key to continue"
-echo "video_drivers"
 gamepad
 read -n1 -p "Press any key to continue"
-echo "gamepad"
 printer
 read -n1 -p "Press any key to continue"
-echo "printer"
 bluetooth
 read -n1 -p "Press any key to continue"
-echo "bluetooth"
 detect_de
 read -n1 -p "Press any key to continue"
-echo "detect_de"
 # Ask about restart
 echo -e "${GREEN}Script completed succesfully. Do you want to restart your system to apply all changes now?(y/n)${RESET}"
 read -r restart_response
