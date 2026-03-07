@@ -1207,7 +1207,6 @@ setup_sound
 setup_boot_loaders
 setup_flatpak
 usefull_packages
-read -n1 -p "Press any key to continue"
 install_software
 firewall
 read -n1 -p "Press any key to continue"
