@@ -861,6 +861,10 @@ function install_xfce() {
     xdg-user-dirs-update
 }
 
+# -----------------------------------------------------------------------------
+# Define software choices for each category
+# -----------------------------------------------------------------------------
+function set_software_list() {
 set "FLAT=Flatpak"
 set "AURT=Aur"
 # Declare associative arrays for each software category
@@ -879,10 +883,6 @@ declare -A emulator_list2
 declare -A emulator_list3
 # Will store the complete list of packages to install
 selected_packages=""
-# -----------------------------------------------------------------------------
-# Define software choices for each category
-# -----------------------------------------------------------------------------
-function set_software_list() {
     desktop_list=(
         ["Discord(instant messaging and VoIP social platform)"]="discord|com.discordapp.Discord"
 		["Vesktop(Snappier Discord alternitive)"]="vesktop-bin|dev.vencord.Vesktop"
