@@ -6,6 +6,6 @@
 sudo pacman -S --needed git \
   && git clone https://github.com/beachmichael55/arch \
   && cd ~/arch \
-  && chmod +x ./arch.sh \
-  && ./arch.sh
+  && chmod +x ./*.sh \
+  && ./1.sh
 ```
