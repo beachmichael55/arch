@@ -1,0 +1,2 @@
+#!/bin/bash
+sudo pacman -S --noconfirm --needed mesa lib32-mesa vulkan-radeon lib32-vulkan-radeon libva-mesa-driver lib32-libva-mesa-driver vulkan-mesa-layers mesa-utils glu vulkan-icd-loader lib32-vulkan-icd-loader vulkan-tools radeontop xf86-video-amdgpu xf86-video-ati corectrl lact rocm-opencl-runtime rocm-hip-runtime
