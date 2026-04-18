@@ -1,0 +1,271 @@
+#!/bin/bash
+if command -v yay &> /dev/null; then
+        AUR=yay
+elif command -v paru &> /dev/null; then
+        AUR=paru
+fi
+#!/bin/bash
+local sysctl_file="/etc/sysctl.d/99-mike-kernel.conf"
+# Remove existing sysctl file if it exists
+if [ -f "$sysctl_file" ]; then
+    sudo rm $sysctl_file
+fi
+# Create new sysctl config with system performance optimizations
+sudo tee $sysctl_file > /dev/null << 'EOF'
+# The sysctl swappiness parameter determines the kernel's preference for pushing anonymous pages or page cache to disk in memory-starved situations.
+# A low value causes the kernel to prefer freeing up open files (page cache), a high value causes the kernel to try to use swap space,
+# and a value of 100 means IO cost is assumed to be equal.
+vm.swappiness = 100
+
+# The value controls the tendency of the kernel to reclaim the memory which is used for caching of directory and inode objects (VFS cache).
+# Lowering it from the default value of 100 makes the kernel less inclined to reclaim VFS cache (do not set it to 0, this may produce out-of-memory conditions)
+vm.vfs_cache_pressure = 50
+
+# Contains, as bytes, the number of pages at which a process which is
+# generating disk writes will itself start writing out dirty data.
+vm.dirty_bytes = 268435456
+
+# page-cluster controls the number of pages up to which consecutive pages are read in from swap in a single attempt.
+# This is the swap counterpart to page cache readahead. The mentioned consecutivity is not in terms of virtual/physical addresses,
+# but consecutive on swap space - that means they were swapped out together. (Default is 3)
+# increase this value to 1 or 2 if you are using physical swap (1 if ssd, 2 if hdd)
+vm.page-cluster = 0
+
+# Contains, as bytes, the number of pages at which the background kernel
+# flusher threads will start writing out dirty data.
+vm.dirty_background_bytes = 67108864
+
+# The kernel flusher threads will periodically wake up and write old data out to disk.  This
+# tunable expresses the interval between those wakeups, in 100'ths of a second (Default is 500).
+vm.dirty_writeback_centisecs = 1500
+
+# This action will speed up your boot and shutdown, because one less module is loaded. Additionally disabling watchdog timers increases performance and lowers power consumption
+# Disable NMI watchdog
+kernel.nmi_watchdog = 0
+
+# Enable the sysctl setting kernel.unprivileged_userns_clone to allow normal users to run unprivileged containers.
+kernel.unprivileged_userns_clone = 1
+
+# To hide any kernel messages from the console
+kernel.printk = 3 3 3 3
+
+# Restricting access to kernel pointers in the proc filesystem
+kernel.kptr_restrict = 2
+
+# Disable Kexec, which allows replacing the current running kernel.
+kernel.kexec_load_disabled = 1
+
+# Increase netdev receive queue
+# May help prevent losing packets
+net.core.netdev_max_backlog = 4096
+
+# Set size of file handles and inode cache
+fs.file-max = 2097152
+
+# Disable Intel split-lock
+kernel.split_lock_mitigate = 0
+EOF
+# Reload sysctl settings
+sudo sysctl --system
+## grub-btrfsd ######
+sudo systemctl enable cronie.service
+sudo systemctl enable grub-btrfsd
+sudo sed -i 's|ExecStart=/usr/bin/grub-btrfsd --syslog /.snapshots|ExecStart=/usr/bin/grub-btrfsd --syslog --timeshift-auto|' /etc/systemd/system/multi-user.target.wants/grub-btrfsd.service
+if [ ! -f /etc/pacman.d/hooks/grub.hook ]; then
+	sudo tee /etc/pacman.d/hooks/grub.hook > /dev/null << 'EOF'
+[Trigger]
+Type = File
+Operation = Install
+Operation = Upgrade
+Operation = Remove
+Target = usr/lib/modules/*/vmlinuz
+
+[Action]
+Description = Updating grub configuration ...
+When = PostTransaction
+Exec = /usr/bin/grub-mkconfig -o /boot/grub/grub.cfg
+EOF
+sudo sed -i 's/#\s*GRUB_DISABLE_OS_PROBER=false/GRUB_DISABLE_OS_PROBER=false/' '/etc/default/grub'
+sudo os-prober
+sudo grub-mkconfig -o /boot/grub/grub.cfg
+declare -A cmd_map=(
+        [fix-key]="sudo rm /var/lib/pacman/sync/* && \
+sudo rm -rf /etc/pacman.d/gnupg/* && \
+sudo pacman-key --init && \
+sudo pacman-key --populate && \
+sudo pacman -Sy --noconfirm archlinux-keyring && \
+sudo pacman --noconfirm -Su"
+        [update-arch]="${AUR} -Syu --noconfirm"
+        [update-grub]="sudo grub-mkconfig -o /boot/grub/grub.cfg"
+        [install-all-pkg]="sudo pacman -S \$(pacman -Qnq) --overwrite '*'"
+    )
+    # Add the clean-arch command based on the chosen AUR helper
+    if [[ "${AUR}" == "yay" ]]; then
+        cmd_map[clean-arch]="yay -Sc --noconfirm && yay -Yc --noconfirm"
+    elif [[ "${AUR}" == "paru" ]]; then
+        cmd_map[clean-arch]="paru -Sc --noconfirm && paru -c --noconfirm"
+    fi
+    # 2. Create or recreate executable scripts in /usr/bin for each command
+    for name in "${!cmd_map[@]}"; do
+        local cmd="${cmd_map[$name]}"
+        # If the binary already exists, remove it first
+        if [[ -f /usr/bin/${name} ]]; then
+            sudo rm /usr/bin/${name}
+        fi
+	done
+        sudo tee /usr/bin/${name} > /dev/null << EOF
+#!/bin/bash
+# Auto-generated by shell_config(): ${name}
+${cmd}
+EOF
+sudo chmod +x /usr/bin/${name}
+touch "${HOME}/.bashrc"
+if ! grep -q "bash_aliases" "${HOME}/.bashrc"; then
+    echo -e '\n# Source ~/.bash_aliases if it exists\n[ -f ~/.bash_aliases ] && source ~/.bash_aliases' >> "${HOME}/.bashrc"
+	else
+		echo "Bash Aliases line already sources in ~/.bash_aliases"
+fi
+cat > "${HOME}/.bash_aliases" <<'EOF'
+### Custom Aliases ###
+# Clear screen and history
+alias cls='clear'
+alias acls='history -c; clear'
+
+# List hidden files
+alias lh='ls -a --color=auto'
+
+# Directory commands
+alias mkdir='mkdir -pv'
+alias rmdir='rm -rdv'
+
+# Safer file operations
+alias mv='mv -i'
+alias cp='cp -i'
+alias rm='rm -i'
+
+# Networking and package management
+alias brctl='sudo brctl'
+alias net?='ping google.com -c 5'
+
+# System info
+alias stats='sudo systemctl status'
+alias fstats='sudo systemctl status > status.txt'
+alias analyze='systemd-analyze'
+alias blame='systemd-analyze blame'
+alias chain='systemd-analyze critical-chain'
+alias chart='systemd-analyze plot > test.svg'
+
+# KDE
+alias plasmareset='killall plasmashell; kstart plasmashell'
+
+# Grep with color
+alias grep='grep --colour=auto'
+
+# Pacman and AUR
+alias add='sudo pacman -S --needed'
+alias sp='pacman -Ss'
+alias rem='sudo pacman -Rsn'
+alias yay='paru -S'
+alias sa='paru -Ss'
+alias pac='sudo nano /etc/pacman.conf'
+
+# Editors and config
+alias nb='nano ~/.bashrc'
+alias nano='vim'
+alias n='nano'
+
+# Fastfetch
+alias ff='fastfetch'
+
+# Disk and navigation
+alias ld='lsblk'
+alias up='cd ..'
+alias up2='cd ../..'
+alias up3='cd ../../..'
+alias up4='cd ../../../..'
+alias up5='cd ../../../../..'
+
+# Network IP info
+alias lan="ip addr show | grep 'inet ' | grep -v '127.0.0.1' | cut -d' ' -f6 | cut -d/ -f1"
+alias lan6="ip addr show | grep 'inet6 ' | cut -d ' ' -f6 | sed -n '2p'"
+alias wan='curl ipinfo.io/ip'
+
+# Make all .sh files executable
+#alias run='find . -type f -name \"*.sh\" -exec chmod +x {} \;'
+alias run='find . -type f -name "*.sh" -exec chmod +x {} \;'
+
+# Gaming and Wine tools
+alias proton='protontricks --gui --no-bwrap'
+alias bottles='flatpak run --command=bottles-cli com.usebottles.bottles'
+EOF
+if [ ! -f /etc/gamemode.ini ]; then
+    sudo tee /etc/gamemode.ini > /dev/null <<EOF
+[general]
+reaper_freq=5
+desiredgov=performance
+desiredgov=performance
+igpu_desiredgov=powersave
+igpu_power_threshold=0.3
+softrealtime=off
+renice=0
+ioprio=0
+inhibit_screensaver=1
+disable_splitlock=1
+
+[filter]
+;whitelist=RiseOfTheTombRaider
+;blacklist=HalfLife3
+
+[gpu]
+;apply_gpu_optimisations=0
+;gpu_device=0
+;nv_powermizer_mode=1
+;nv_core_clock_mhz_offset=0
+;nv_mem_clock_mhz_offset=0
+;amd_performance_level=high
+
+[cpu]
+;park_cores=no
+;pin_cores=yes
+
+[supervisor]
+;supervisor_whitelist=
+;supervisor_blacklist=
+;require_supervisor=0
+
+[custom]
+;start=notify-send "GameMode started"
+;end=notify-send "GameMode ended"
+;script_timeout=10'
+EOF
+fi
+groups_lst="sys,network,wheel,audio,lp,storage,video,users,rfkill,gamemode"
+sudo usermod -aG ${groups_lst} $(whoami)
+sudo systemctl enable firewalld.service
+if command -v firewall-cmd >/dev/null 2>&1; then
+    sudo firewall-cmd --permanent --add-service=ipp
+    sudo firewall-cmd --permanent --add-service=mdns
+    sudo firewall-cmd --reload
+fi
+sudo systemctl enable bluetooth cups_service reflector.timer docker
+systemctl --user enable arch-update.timer
+arch-update --tray --enable
+sudo firewall-cmd --permanent --add-port=27031-27036/udp &> /dev/null
+sudo firewall-cmd --permanent --add-port=27036/tcp &> /dev/null
+sudo firewall-cmd --permanent --add-port=27037/tcp &> /dev/null
+sudo firewall-cmd --reload &> /dev/null
+python -m ensurepip --upgrade
+python -m pip install --upgrade pip setuptools wheel virtualenv setuptools-rust
+BOOTNEXT_URL=$(curl -s https://api.github.com/repos/TensorWorks/bootnext/releases/latest | grep "browser_download_url" | grep "linux-amd64" | cut -d '"' -f 4)
+DEST="/usr/local/bin/bootnext"
+if [[ -z "$BOOTNEXT_URL" ]]; then
+  echo "Could not find a download URL for BOOTNEXT"
+  exit 1
+fi
+if sudo curl -fSL "$BOOTNEXT_URL" -o "$DEST"; then
+  sudo chmod +x "$DEST"
+  echo "BOOTNEXT successfully installed to $DEST"
+else
+  echo "Failed to download BOOTNEXT"
+  exit 1
+fi

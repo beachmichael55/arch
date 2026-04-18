@@ -1,0 +1,105 @@
+# FOR SSD "/sd(*=whatever the drive is)" like /sda for drive 'a'
+# FOR NVME "/nvme(*)n(*)" like /nvme1n1 for drive 1
+# For WiFi use iwctl
+
+00 setfont ter-132b
+00 timedatectl set-ntp true
+00 pacman -Sy archlinux-keyring
+00 pacman -Sy reflector
+00 reflector --country 'United States' --latest 20 --sort rate --save /etc/pacman.d/mirrorlist
+
+01 lsblk to list disks
+02 cfdisk /dev/sda
+	First- 1GB; type:EFI System for Boot
+	Second- For Swap: Min 4GB, match how much ram have; type:Linux swap
+	Third- Main: Whatever is left
+	Write
+03 mkfs.fat -F32 /dev/sda1
+	#	04 mkswap /dev/sda2
+	#	05 swapon /dev/sda2
+
+#For Encryption, steps will start with '!!'
+!!         cryptsetup luksFormat /dev/sda3
+!!         cryptsetup luksOpen /dev/sda3 "root"
+
+06 mkfs.btrfs -L 'archroot' /dev/sda3; Your Label is whatever you want !!  mkfs.btrfs /dev/mapper/"CHOOSENAME"
+07 mount /dev/sda3 /mnt !! mount /dev/mapper/"CHOOSENAME" /mnt
+08 btrfs subvolume create /mnt/@
+09 btrfs subvolume create /mnt/@home
+10 btrfs subvolume create /mnt/@log
+11 btrfs subvolume create /mnt/@cache
+	@@ btrfs subvolume create /mnt/swap
+
+13
+14 umount /mnt
+15 mount -o noatime,compress=zstd,subvol=@ /dev/sda3 /mnt !! mount -o noatime,compress=zstd,subvol=@ /dev/mapper/archlinux /mnt
+16 mkdir -p /mnt/{boot,home,var/log,var/cache}
+17 mount -o noatime,compress=zstd,subvol=@home /dev/sda3 /mnt/home !! mount -o noatime,compress=zstd,subvol=@home /dev/mapper/archlinux /mnt/home
+18 mount -o noatime,compress=zstd,subvol=@log /dev/sda3 /mnt/var/log !! mount -o noatime,compress=zstd,subvol=@log /dev/mapper/archlinux /mnt/var/log
+19 mount -o noatime,compress=zstd,subvol=@cache /dev/sda3 /mnt/var/cache !! mount -o noatime,compress=zstd,subvol=@cache /dev/mapper/archlinux /mnt/var/cache
+20 @@ btrfs filesystem mkswapfile --size 4g --uuid clear /swap/swapfile
+   @@ swapon /swap/swapfile
+21 mount /dev/sda1 /mnt/boot
+22 pacstrap -K /mnt base base-devel linux linux-lts linux-firmware networkmanager grub terminus-font efibootmgr git sddm plasma-meta konsole nano reflector zram-generator !! cryptsetup lvm2 sbctl
+
+23 genfstab -U /mnt > /mnt/etc/fstab
+	If not autoadded for SWAP: /dev/mapper/swap none swap defaults 0 0
+
+24 arch-chroot /mnt
+25 ln -sf /usr/share/zoneinfo/America/New_York /etc/localtime
+ hwclock --systohc
+ nano /etc/locale.gen
+ uncommant en_US
+26 locale-gen
+27 echo "LANG=en_US.UTF-8" >> /etc/locale.conf
+28 echo "YOUR_Hostname" >> /etc/hostname
+echo "KEYMAP=us" >> etc/vconsole.conf
+echo "FONT=ter-132b" >> etc/vconsole.conf
+29 passwd 'ROOT_PASSWORD'
+30 useradd -m -G wheel 'USER_NAME'
+31 passwd 'USER_NAME'
+32 EDITOR=nano visudo
+33 uncommant #%wheel ALL=(ALL:ALL) ALL
+34 systemctl enable NetworkManager sddm
+
+FOR Secure_Boot
+	sbctl status
+	sbctl create-keys
+	sbctl enroll-keys -m
+	sbctl status
+	sbctl sign -s /boot/EFI/BOOT/BOOTX64.EFI
+	sbctl sign -s /boot/EFI/grub/grubx64.efi
+	sbctl sign -s /boot/vmlinuz-linux
+
+FOR GRUB nano /etc/mkinitcpio.conf
+	systemd: "HOOKS=base systemd autodetect microcode modconf kms keyboard sd-vconsole        block sd-encrypt *lvm2* filesystems fsck"
+	udev:    "HOOKS=base udev    autodetect microcode modconf kms keyboard keymap consolefont block    encrypt *lvm2* filesystems fsck"
+mkinitcpio -p
+	@@@ for drive UUID 'blkid -o value -s UUID /dev/sda3 >> /etc/default/grub'
+nano /etc/default/grub
+		for udev:    GRUB_CMDLINE_LINUX="cryptdevice=UUID='encrypted UUID':root rootfstype=btrfs"
+		for systemd: GRUB_CMDLINE_LINUX="rd.luks.name=<UUID>=root root=/dev/mapper/cryptroot rw"
+
+35 grub-install --target=x86_64-efi --efi-directory=/boot --bootloader-id=GRUB !! 'add /dev/sda' at end
+36 grub-mkconfig -o /boot/grub/grub.cfg
+
+ exit
+37 umount -R /mnt
+38 reboot
+
+	GPU Drivers
+		AMD
+			libva-mesa-driver mesa vulkan-radeon xf86-video-amdgpu xf86-video-ati xorg-server xorg-xinit
+		Intel
+			libva-mesa-driver mesa libva-intel-driver vulkan-intel xorg-server xorg-xinit
+		Nvidia Open kernal (For Turing+)
+			dkms libva-nvidia-driver nvidia-open-dkms xorg-server xorg-xinit
+		Nvidia Proprietary
+			dkms libva-nvidia-driver nvidia-dkms xorg-server xorg-xinit
+sudo systemctl systemd-zram-setup@zram0
+nano /etc/systemd/zram-generator.conf
+	[zram0]
+	zram-size = ram / 2
+	compression-algorithm = zstd
+	swap-priority = 100
+	mount-point = /dev/zram0
